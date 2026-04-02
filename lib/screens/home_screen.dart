@@ -6,6 +6,7 @@ import '../providers/hlc_provider.dart';
 import '../services/memory_database.dart';
 import '../theme/ma_colors.dart';
 import 'hiyoko/memory_input_screen.dart';
+import 'hiyoko/coloring_screen.dart';
 import 'parent/parent_dashboard.dart';
 
 /// ホーム画面（MVP）: 日記タイムライン + 投稿ボタン
@@ -118,17 +119,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
 
-      // 投稿ボタン（FAB）
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const MemoryInputScreen()));
-          _load();
-        },
-        backgroundColor: MaColors.gold,
-        foregroundColor: const Color(0xFF5C3D10),
-        icon: const Icon(Icons.edit_rounded),
-        label: const Text('きろく', style: TextStyle(fontWeight: FontWeight.w700)),
+      // 下部ボタン
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Row(
+          children: [
+            // ぬりえ
+            FloatingActionButton(
+              heroTag: 'coloring',
+              onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ColoringScreen())),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF5C3D10),
+              elevation: 2,
+              child: const Icon(Icons.brush_rounded),
+            ),
+            const Spacer(),
+            // きろく（メイン）
+            FloatingActionButton.extended(
+              heroTag: 'record',
+              onPressed: () async {
+                await Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const MemoryInputScreen()));
+                _load();
+              },
+              backgroundColor: MaColors.gold,
+              foregroundColor: const Color(0xFF5C3D10),
+              elevation: 4,
+              icon: const Icon(Icons.edit_rounded),
+              label: const Text('きろく', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
       ),
     );
   }

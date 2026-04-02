@@ -23,7 +23,7 @@ void main() {
     });
 
     test('isChallenge flag', () {
-      final normal = MemoryEntry(id: '1', date: DateTime.now(), stamp: MemoryStamp.ate, text: 'food');
+      final normal = MemoryEntry(id: '1', date: DateTime.now(), stamp: MemoryStamp.kindness, text: 'food');
       final challenge = MemoryEntry(id: '2', date: DateTime.now(), stamp: MemoryStamp.challenge, text: 'brave');
       expect(normal.isChallenge, false);
       expect(challenge.isChallenge, true);
@@ -91,7 +91,7 @@ void main() {
       final entry = MemoryEntry(
         id: 'photo-1',
         date: DateTime(2026, 4, 2),
-        stamp: MemoryStamp.went,
+        stamp: MemoryStamp.discovery,
         text: 'おさんぽ',
         photoPath: '/tmp/manga_123.png',
       );
@@ -101,7 +101,7 @@ void main() {
     });
 
     test('photoPath can be null', () {
-      final entry = MemoryEntry(id: 'no-photo', date: DateTime.now(), stamp: MemoryStamp.ate, text: 'food');
+      final entry = MemoryEntry(id: 'no-photo', date: DateTime.now(), stamp: MemoryStamp.kindness, text: 'food');
       expect(entry.photoPath, null);
       final json = entry.toJson();
       final restored = MemoryEntry.fromJson(json);

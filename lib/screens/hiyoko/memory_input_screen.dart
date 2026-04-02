@@ -9,6 +9,7 @@ import '../../providers/hlc_provider.dart';
 import '../../services/memory_database.dart';
 import '../../services/manga_converter.dart';
 import '../../theme/ma_colors.dart';
+import '../../widgets/gaogao_reaction.dart';
 
 /// 日記投稿画面（MVP: スタンプ + テキスト + 写真→漫画変換 + 保存）
 class MemoryInputScreen extends ConsumerStatefulWidget {
@@ -79,8 +80,15 @@ class _MemoryInputScreenState extends ConsumerState<MemoryInputScreen> {
 
     await MemoryDatabase.insert(entry);
     ref.read(hlcScoreProvider.notifier).onPost();
-
     setState(() => _saving = false);
+
+    // ガオガオリアクション → 戻る
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => GaogaoReaction(onComplete: () => Navigator.pop(context)),
+    );
     if (mounted) Navigator.pop(context);
   }
 
@@ -359,11 +367,14 @@ class _MemoryInputScreenState extends ConsumerState<MemoryInputScreen> {
 
   String _hintFor(MemoryStamp stamp) {
     switch (stamp) {
-      case MemoryStamp.ate: return 'なにをたべた？おいしかった？';
-      case MemoryStamp.went: return 'どこにいった？なにをみた？';
-      case MemoryStamp.played: return 'なにであそんだ？';
-      case MemoryStamp.pet: return 'どうぶつとなにをした？';
+      case MemoryStamp.kindness: return 'だれにやさしくした？';
+      case MemoryStamp.logic: return 'じゅんばんをかんがえてやったことは？';
+      case MemoryStamp.creation: return 'なにをつくった？かいた？';
+      case MemoryStamp.discovery: return 'なにをみつけた？きづいた？';
       case MemoryStamp.challenge: return 'なにに挑んだ？';
+      case MemoryStamp.expression: return 'だれになにをつたえた？';
+      case MemoryStamp.helping: return 'だれのおてつだいをした？';
+      case MemoryStamp.nature: return 'そとでなにをみた？かんじた？';
     }
   }
 }
