@@ -7,7 +7,7 @@ import '../../theme/ma_colors.dart';
 import '../../widgets/ice_button.dart';
 import 'penguin_logic_puzzle.dart';
 
-/// 🐧 ペンギン級ホーム — 氷の結晶UI + 論理パズル入口
+/// 🐧 ペンギン級ホーム
 class PenguinHome extends ConsumerStatefulWidget {
   const PenguinHome({super.key});
 
@@ -38,6 +38,8 @@ class _PenguinHomeState extends ConsumerState<PenguinHome>
   @override
   Widget build(BuildContext context) {
     final score = ref.watch(hlcScoreProvider);
+    final deep = MaColors.penguinDeep;
+    final ice = MaColors.penguinIce;
 
     return Scaffold(
       body: AnimatedBuilder(
@@ -61,11 +63,11 @@ class _PenguinHomeState extends ConsumerState<PenguinHome>
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: Colors.white.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: MaColors.penguinIce.withValues(alpha: 0.5)),
+                          border: Border.all(color: ice.withOpacity(0.5)),
                         ),
-                        child: Icon(Icons.arrow_back_rounded, color: MaColors.penguinDeep),
+                        child: Icon(Icons.arrow_back_rounded, color: deep),
                       ),
                     ),
                     const Spacer(),
@@ -74,31 +76,24 @@ class _PenguinHomeState extends ConsumerState<PenguinHome>
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: MaColors.penguinDeep,
+                        color: deep,
                       ),
                     ),
                     const Spacer(),
-                    // 論理スコア
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Colors.white.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: MaColors.penguinIce),
+                        border: Border.all(color: ice),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.psychology_rounded, size: 18, color: MaColors.penguinDeep),
-                          const SizedBox(width: 4),
-                          Text(
-                            'L:${score.logic}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: MaColors.penguinDeep,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        'L:${score.logic}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: deep,
+                        ),
                       ),
                     ),
                   ],
@@ -108,28 +103,32 @@ class _PenguinHomeState extends ConsumerState<PenguinHome>
               const SizedBox(height: 16),
 
               // ペンギン + 結晶
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  AnimatedBuilder(
-                    animation: _bgController,
-                    builder: (context, _) {
-                      return IceCrystal(size: 200, animValue: _bgController.value);
-                    },
-                  ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    transitionBuilder: (child, anim) => ScaleTransition(
-                      scale: CurvedAnimation(parent: anim, curve: Curves.elasticOut),
-                      child: child,
+              SizedBox(
+                width: 200,
+                height: 200,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _bgController,
+                      builder: (context, _) {
+                        return IceCrystal(size: 200, animValue: _bgController.value);
+                      },
                     ),
-                    child: PenguinFace(
-                      key: ValueKey(_currentMood),
-                      mood: _currentMood,
-                      size: 110,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      transitionBuilder: (child, anim) => ScaleTransition(
+                        scale: CurvedAnimation(parent: anim, curve: Curves.elasticOut),
+                        child: child,
+                      ),
+                      child: PenguinFace(
+                        key: ValueKey(_currentMood),
+                        mood: _currentMood,
+                        size: 110,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
               const SizedBox(height: 8),
@@ -138,7 +137,7 @@ class _PenguinHomeState extends ConsumerState<PenguinHome>
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: MaColors.penguinDeep,
+                  color: deep,
                 ),
               ),
 
@@ -201,9 +200,9 @@ class _PenguinHomeState extends ConsumerState<PenguinHome>
                 margin: const EdgeInsets.symmetric(horizontal: 24),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: Colors.white.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: MaColors.penguinIce.withValues(alpha: 0.3)),
+                  border: Border.all(color: ice.withOpacity(0.3)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,

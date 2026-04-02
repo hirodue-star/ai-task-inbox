@@ -92,8 +92,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     colors: [Color(0xFFE8F4FF), Color(0xFFD0E8FF)],
                   ),
                   shadowColor: MaColors.penguinDeep,
-                  onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const PenguinHome())),
+                  onTap: () {
+                    debugPrint('PENGUIN TAP');
+                    Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const PenguinHome()));
+                  },
                 ),
                 const SizedBox(height: 20),
                 _LevelCard(
