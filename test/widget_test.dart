@@ -85,4 +85,27 @@ void main() {
       expect(container.read(hlcScoreProvider).hospitality, 6);
     });
   });
+
+  group('MemoryEntry with photo', () {
+    test('photoPath is preserved in JSON', () {
+      final entry = MemoryEntry(
+        id: 'photo-1',
+        date: DateTime(2026, 4, 2),
+        stamp: MemoryStamp.went,
+        text: 'おさんぽ',
+        photoPath: '/tmp/manga_123.png',
+      );
+      final json = entry.toJson();
+      final restored = MemoryEntry.fromJson(json);
+      expect(restored.photoPath, '/tmp/manga_123.png');
+    });
+
+    test('photoPath can be null', () {
+      final entry = MemoryEntry(id: 'no-photo', date: DateTime.now(), stamp: MemoryStamp.ate, text: 'food');
+      expect(entry.photoPath, null);
+      final json = entry.toJson();
+      final restored = MemoryEntry.fromJson(json);
+      expect(restored.photoPath, null);
+    });
+  });
 }

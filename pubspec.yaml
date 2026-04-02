@@ -1,27 +1,18 @@
 name: ma_logic
-description: MA-LOGIC — お手伝いで絆を育む知育アプリ
+description: MA-LOGIC — 日記でわが子の強みが見える
 publish_to: 'none'
-version: 2.0.0+1
+version: 3.0.0+1
 environment:
   sdk: '>=3.0.0 <4.0.0'
 dependencies:
   flutter:
     sdk: flutter
-  # ステート管理
   flutter_riverpod: ^2.5.1
-  # ローカルDB
   sqflite: ^2.3.3+2
   path: ^1.9.0
-  # ユーティリティ
   uuid: ^4.5.1
-  intl: ^0.19.0
-  shared_preferences: ^2.3.3
-  # Firebase（設定完了後に有効化）
-  # firebase_core: ^3.6.0
-  # firebase_messaging: ^15.1.3
-  # cloud_firestore: ^5.4.4
-  # firebase_auth: ^5.3.1
-  # lottie: ^3.1.2
+  image_picker: ^1.1.2
+  image: ^4.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

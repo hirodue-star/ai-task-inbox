@@ -48,19 +48,20 @@ export function Hero() {
 
       {/* キャッチコピー */}
       <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-center text-[#2C3E50] leading-tight mb-4">
-        <span className="block">遊びが、</span>
+        <span className="block">日記で、</span>
+        <span className="block">わが子の</span>
         <span
           className="block bg-clip-text text-transparent"
           style={{ backgroundImage: "linear-gradient(135deg, #FFD700, #C8960C)" }}
         >
-          合格へ。
+          強みが見える。
         </span>
       </h1>
 
       <p className="text-lg sm:text-xl text-center text-[#5C3D10]/70 max-w-md mb-8 leading-relaxed">
-        お手伝い × 知育 × 漫画日記<br />
-        子供の「やりたい」が<br />
-        私立入学の力になる
+        写真を撮って日記を書くだけ。<br />
+        AIがお子様の「思いやり」「論理力」「創造性」を<br />
+        リアルタイムで可視化します。
       </p>
 
       {/* CTA */}

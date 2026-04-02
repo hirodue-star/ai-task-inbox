@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/memory_entry.dart';
@@ -151,47 +152,50 @@ class _DiaryCard extends StatelessWidget {
             : null,
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // スタンプ
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F5F0),
+          // 写真（漫画変換済みの場合は線画）
+          if (memory.photoPath != null && File(memory.photoPath!).existsSync())
+            ClipRRect(
               borderRadius: BorderRadius.circular(12),
+              child: Image.file(
+                File(memory.photoPath!),
+                width: double.infinity, height: 160, fit: BoxFit.cover,
+              ),
             ),
-            child: Center(child: Text(memory.stamp.emoji, style: const TextStyle(fontSize: 22))),
-          ),
-          const SizedBox(width: 12),
-          // テキスト
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(memory.text, style: const TextStyle(fontSize: 15, color: Color(0xFF2C3E50), height: 1.4)),
-                const SizedBox(height: 4),
-                Row(
+          if (memory.photoPath != null) const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(memory.stamp.emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${memory.date.month}/${memory.date.day} ${memory.date.hour}:${memory.date.minute.toString().padLeft(2, '0')}',
-                      style: TextStyle(fontSize: 11, color: const Color(0xFF2C3E50).withOpacity(0.3)),
-                    ),
-                    if (memory.isChallenge) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                        decoration: BoxDecoration(
-                          gradient: MaColors.goldGradient,
-                          borderRadius: BorderRadius.circular(6),
+                    Text(memory.text, style: const TextStyle(fontSize: 15, color: Color(0xFF2C3E50), height: 1.4)),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          '${memory.date.month}/${memory.date.day} ${memory.date.hour}:${memory.date.minute.toString().padLeft(2, '0')}',
+                          style: TextStyle(fontSize: 11, color: const Color(0xFF2C3E50).withOpacity(0.3)),
                         ),
-                        child: const Text('⚔️', style: TextStyle(fontSize: 10)),
-                      ),
-                    ],
+                        if (memory.isChallenge) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                            decoration: BoxDecoration(gradient: MaColors.goldGradient, borderRadius: BorderRadius.circular(6)),
+                            child: const Text('⚔️', style: TextStyle(fontSize: 10)),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
