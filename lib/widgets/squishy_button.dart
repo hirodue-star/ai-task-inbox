@@ -3,7 +3,7 @@ import 'package:flutter/physics.dart';
 import '../theme/ma_colors.dart';
 
 /// 🐣 ひよこ級：ぷにぷにマシュマロボタン
-/// 3D光沢 + Inner Shadow でゼリーのような質感を表現
+/// SpringSimulation + 横膨張でマシュマロの弾性を再現
 class SquishyButton extends StatefulWidget {
   final Color color;
   final String label;
@@ -23,42 +23,42 @@ class SquishyButton extends StatefulWidget {
 }
 
 class _SquishyButtonState extends State<SquishyButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnim;
+    with TickerProviderStateMixin {
+  late AnimationController _verticalController;
+  late AnimationController _horizontalController;
   bool _pressed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController.unbounded(vsync: this);
-    _scaleAnim = AlwaysStoppedAnimation(1.0);
+    _verticalController = AnimationController.unbounded(vsync: this, value: 1.0);
+    _horizontalController = AnimationController.unbounded(vsync: this, value: 1.0);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _verticalController.dispose();
+    _horizontalController.dispose();
     super.dispose();
   }
 
   void _pressDown() {
     setState(() => _pressed = true);
-    _controller.stop();
-    _controller.value = 0.9;
-    _scaleAnim = AlwaysStoppedAnimation(0.9);
+    _verticalController.stop();
+    _horizontalController.stop();
+    // 縦に縮む + 横に広がる = マシュマロが押された質感
+    _verticalController.value = 0.85;
+    _horizontalController.value = 1.12;
   }
 
   void _releaseSpring() {
     setState(() => _pressed = false);
-    // SpringSimulation: 弾力のある戻り
-    final spring = SpringDescription(
-      mass: 1.0,
-      stiffness: 400.0,
-      damping: 12.0,
-    );
-    final sim = SpringSimulation(spring, 0.9, 1.0, 0);
-    _scaleAnim = _controller.drive(Tween(begin: 0.9, end: 1.0));
-    _controller.animateWith(sim);
+    // 縦方向：やわらかく戻る（低めのstiffnessで「ぷにっ」感）
+    final vertSpring = SpringDescription(mass: 1.0, stiffness: 300.0, damping: 8.0);
+    _verticalController.animateWith(SpringSimulation(vertSpring, 0.85, 1.0, 2.0));
+    // 横方向：少し遅れて戻る（体積保存っぽさ）
+    final horizSpring = SpringDescription(mass: 1.2, stiffness: 250.0, damping: 9.0);
+    _horizontalController.animateWith(SpringSimulation(horizSpring, 1.12, 1.0, -1.5));
   }
 
   @override
@@ -75,10 +75,12 @@ class _SquishyButtonState extends State<SquishyButton>
       },
       onTapCancel: () => _releaseSpring(),
       child: AnimatedBuilder(
-        animation: _scaleAnim,
+        animation: Listenable.merge([_verticalController, _horizontalController]),
         builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnim.value,
+          return Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..scale(_horizontalController.value, _verticalController.value),
             child: child,
           );
         },
@@ -87,7 +89,6 @@ class _SquishyButtonState extends State<SquishyButton>
           height: s,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            // 外側のメインカラー + 立体感
             gradient: RadialGradient(
               center: const Alignment(-0.3, -0.3),
               radius: 0.9,
@@ -95,13 +96,11 @@ class _SquishyButtonState extends State<SquishyButton>
               stops: const [0.0, 0.6, 1.0],
             ),
             boxShadow: [
-              // 外側の影（浮き上がり）
               BoxShadow(
                 color: darker.withValues(alpha: 0.4),
                 blurRadius: _pressed ? 4 : 12,
                 offset: _pressed ? const Offset(0, 2) : const Offset(0, 6),
               ),
-              // 下部のハイライト反射
               BoxShadow(
                 color: lighter.withValues(alpha: 0.3),
                 blurRadius: 8,
@@ -111,7 +110,7 @@ class _SquishyButtonState extends State<SquishyButton>
           ),
           child: Stack(
             children: [
-              // 光沢ハイライト（上部の白い反射）
+              // 光沢ハイライト
               Positioned(
                 top: s * 0.1,
                 left: s * 0.2,
