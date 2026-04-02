@@ -17,6 +17,10 @@ import 'parent/parent_dashboard.dart';
 import 'collection_book_screen.dart';
 import 'manga/coloring_screen.dart';
 import 'manga/comic_album_screen.dart';
+import '../providers/level_provider.dart';
+import '../models/user_level.dart';
+import '../painters/evolution_painter.dart';
+import '../widgets/adaptive_nav.dart';
 
 /// ホーム画面：動的世界背景 + 級選択 + 世界復元率
 class HomeScreen extends ConsumerStatefulWidget {
@@ -29,6 +33,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _bgController;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _showEvolution = false;
+  UiTier? _evolutionFrom;
+  UiTier? _evolutionTo;
 
   @override
   void initState() {
@@ -53,7 +61,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final challengeCount = ref.watch(challengeCountProvider).valueOrNull ?? 0;
 
     return Scaffold(
-      body: AnimatedBuilder(
+      key: _scaffoldKey,
+      drawer: const AdaptiveDrawer(),
+      body: Stack(
+        children: [
+          AnimatedBuilder(
         animation: _bgController,
         builder: (context, child) {
           return CustomPaint(
@@ -85,7 +97,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
                 const SizedBox(height: 16),
 
-                // ヘッダー
+                // メニュー + ヘッダー
+                GestureDetector(
+                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.menu_rounded, color: _textColor(world.phase), size: 22),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Text(
                   'MA-LOGIC',
                   style: TextStyle(
@@ -230,6 +257,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
         ),
+      ),
+          // 進化演出オーバーレイ
+          if (_showEvolution && _evolutionFrom != null && _evolutionTo != null)
+            Positioned.fill(
+              child: EvolutionOverlay(
+                fromTier: _evolutionFrom!,
+                toTier: _evolutionTo!,
+                onComplete: () => setState(() => _showEvolution = false),
+              ),
+            ),
+        ],
       ),
     );
   }
