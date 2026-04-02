@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../painters/background_painter.dart';
+import '../models/world_state.dart';
+import '../painters/world_bg_painter.dart';
 import '../providers/hlc_provider.dart';
-import '../models/hlc_score.dart';
+import '../providers/world_provider.dart';
 import '../theme/ma_colors.dart';
+import '../widgets/world_restore_bar.dart';
 import 'hiyoko/hiyoko_home.dart';
 import 'penguin/penguin_home.dart';
 import 'lion/lion_home.dart';
 
-/// ホーム画面：級選択 + HLCスコア表示
+/// ホーム画面：動的世界背景 + 級選択 + 世界復元率
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,7 +27,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     _bgController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
+      duration: const Duration(seconds: 20),
     )..repeat();
   }
 
@@ -37,12 +39,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final world = ref.watch(worldStateProvider);
+    final score = ref.watch(hlcScoreProvider);
+
     return Scaffold(
       body: AnimatedBuilder(
         animation: _bgController,
         builder: (context, child) {
           return CustomPaint(
-            painter: HiyokoBgPainter(animValue: _bgController.value),
+            painter: WorldBgPainter(
+              phase: world.phase,
+              evolution: world.evolutionStage,
+              animValue: _bgController.value,
+              abyssIntensity: world.abyssIntensity,
+            ),
             child: child,
           );
         },
@@ -51,63 +61,120 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 12),
+
+                // 世界復元率バー
+                const WorldRestoreBar(),
+
+                const SizedBox(height: 16),
+
                 // ヘッダー
-                const Text(
+                Text(
                   'MA-LOGIC',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF5C3D10),
+                    color: _textColor(world.phase),
                     letterSpacing: 4,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 8,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
+
+                const SizedBox(height: 4),
+
                 // HLCスコアバー
-                _HlcScoreBar(),
+                _HlcScoreBar(phase: world.phase),
+
                 const SizedBox(height: 8),
-                const Text(
-                  'レベルをえらんでね',
-                  style: TextStyle(fontSize: 16, color: Color(0xFF8B7355)),
+
+                Text(
+                  _phaseGreeting(world.phase),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _textColor(world.phase).withOpacity(0.7),
+                  ),
                 ),
-                const SizedBox(height: 32),
+
+                const SizedBox(height: 24),
+
                 // 級選択カード
                 _LevelCard(
                   title: 'ひよこ級',
-                  subtitle: 'Squishy & Pastel',
+                  subtitle: _phaseSubtitle(world.phase, 'hiyoko'),
                   emoji: '🐣',
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFF0E0), Color(0xFFFFE0EC)],
+                  gradient: LinearGradient(
+                    colors: world.phase == TimeOfDayPhase.morning
+                        ? [const Color(0xFFFFF8F0), const Color(0xFFFFE8D0)]
+                        : [const Color(0xFFFFF0E0), const Color(0xFFFFE0EC)],
                   ),
                   shadowColor: MaColors.hiyokoPink,
-                  onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const HiyokoHome())),
+                  onTap: () {
+                    ref.read(worldStateProvider.notifier).performAction(restorePoints: 0.5);
+                    Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const HiyokoHome()));
+                  },
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+
                 _LevelCard(
                   title: 'ペンギン級',
-                  subtitle: 'Ice & Crystalline',
+                  subtitle: _phaseSubtitle(world.phase, 'penguin'),
                   emoji: '🐧',
                   gradient: const LinearGradient(
                     colors: [Color(0xFFE8F4FF), Color(0xFFD0E8FF)],
                   ),
                   shadowColor: MaColors.penguinDeep,
+                  locked: world.abyssIntensity < 0.3,
                   onTap: () {
-                    debugPrint('PENGUIN TAP');
+                    if (world.abyssIntensity < 0.3) {
+                      _showAbyssMessage();
+                      return;
+                    }
+                    ref.read(worldStateProvider.notifier).performAction(restorePoints: 0.5);
                     Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const PenguinHome()));
                   },
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+
                 _LevelCard(
                   title: 'ライオン級',
-                  subtitle: 'Gold & Particles',
+                  subtitle: _phaseSubtitle(world.phase, 'lion'),
                   emoji: '🦁',
-                  gradient: MaColors.goldGradient,
+                  gradient: world.phase == TimeOfDayPhase.night
+                      ? const LinearGradient(
+                          colors: [Color(0xFFFFE880), Color(0xFFFFD700), Color(0xFFC8960C)],
+                        )
+                      : MaColors.goldGradient,
                   shadowColor: MaColors.lionDeepGold,
-                  onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const LionHome())),
+                  glowing: world.phase == TimeOfDayPhase.night,
+                  onTap: () {
+                    ref.read(worldStateProvider.notifier).performAction(restorePoints: 0.5);
+                    Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const LionHome()));
+                  },
                 ),
+
+                const Spacer(),
+
+                // 深海の渦のヒント
+                if (world.abyssIntensity > 0.1 && world.abyssIntensity < 0.3)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      '画面の奥深くに、何かが蠢いている…',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: MaColors.penguinDeep.withOpacity(0.4),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -115,7 +182,156 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
     );
   }
+
+  void _showAbyssMessage() {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0A1020).withOpacity(0.95),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: MaColors.penguinIce.withOpacity(0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.waves_rounded, size: 48, color: MaColors.penguinIce.withOpacity(0.6)),
+              const SizedBox(height: 12),
+              Text(
+                '深海はまだ遠い…',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: MaColors.penguinIce,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '思考の重みを蓄積させよ。\nお手伝いや思考記録を重ねることで、\n深海への道が開かれる。',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: MaColors.penguinIce.withOpacity(0.6),
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: MaColors.penguinIce.withOpacity(0.3)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'わかった',
+                    style: TextStyle(color: MaColors.penguinIce.withOpacity(0.7)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _textColor(TimeOfDayPhase phase) {
+    switch (phase) {
+      case TimeOfDayPhase.morning: return const Color(0xFF5C3D10);
+      case TimeOfDayPhase.daytime: return const Color(0xFF2C3E50);
+      case TimeOfDayPhase.evening: return const Color(0xFFFFE0C0);
+      case TimeOfDayPhase.night: return const Color(0xFFE0E8FF);
+    }
+  }
+
+  String _phaseGreeting(TimeOfDayPhase phase) {
+    switch (phase) {
+      case TimeOfDayPhase.morning: return 'おはよう。今日も世界を育てよう';
+      case TimeOfDayPhase.daytime: return '太陽が見守っている';
+      case TimeOfDayPhase.evening: return '夕暮れの静けさの中で';
+      case TimeOfDayPhase.night: return '星が知恵を囁いている';
+    }
+  }
+
+  String _phaseSubtitle(TimeOfDayPhase phase, String level) {
+    if (level == 'lion' && phase == TimeOfDayPhase.night) return 'Gold blazing in starlight';
+    if (level == 'hiyoko' && phase == TimeOfDayPhase.morning) return 'Crystal clear pastel dawn';
+    if (level == 'penguin') return 'Ice & Crystalline';
+    if (level == 'hiyoko') return 'Squishy & Pastel';
+    return 'Gold & Particles';
+  }
 }
+
+// === HLCスコアバー ===
+
+class _HlcScoreBar extends ConsumerWidget {
+  final TimeOfDayPhase phase;
+  const _HlcScoreBar({required this.phase});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final score = ref.watch(hlcScoreProvider);
+    final isNight = phase == TimeOfDayPhase.night || phase == TimeOfDayPhase.evening;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isNight ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _ScoreChip(label: 'H', value: score.hospitality, color: MaColors.hiyokoPink),
+          _ScoreChip(label: 'L', value: score.logic, color: MaColors.penguinDeep),
+          _ScoreChip(label: 'C', value: score.creativity, color: MaColors.lionGold),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              gradient: MaColors.goldGradient,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              score.level.name.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF5C3D10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScoreChip extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+  const _ScoreChip({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700)),
+        const SizedBox(width: 2),
+        Text('$value', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+      ],
+    );
+  }
+}
+
+// === レベルカード ===
 
 class _LevelCard extends StatefulWidget {
   final String title;
@@ -124,6 +340,8 @@ class _LevelCard extends StatefulWidget {
   final Gradient gradient;
   final Color shadowColor;
   final VoidCallback onTap;
+  final bool locked;
+  final bool glowing;
 
   const _LevelCard({
     required this.title,
@@ -132,6 +350,8 @@ class _LevelCard extends StatefulWidget {
     required this.gradient,
     required this.shadowColor,
     required this.onTap,
+    this.locked = false,
+    this.glowing = false,
   });
 
   @override
@@ -141,7 +361,6 @@ class _LevelCard extends StatefulWidget {
 class _LevelCardState extends State<_LevelCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _scaleAnim;
 
   @override
   void initState() {
@@ -149,9 +368,6 @@ class _LevelCardState extends State<_LevelCard>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
-    );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
 
@@ -171,122 +387,62 @@ class _LevelCardState extends State<_LevelCard>
       },
       onTapCancel: () => _controller.reverse(),
       child: AnimatedBuilder(
-        animation: _scaleAnim,
+        animation: _controller,
         builder: (context, child) {
-          return Transform.scale(scale: _scaleAnim.value, child: child);
+          final scale = 1.0 - _controller.value * 0.05;
+          return Transform.scale(scale: scale, child: child);
         },
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
           decoration: BoxDecoration(
             gradient: widget.gradient,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: widget.shadowColor.withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                color: widget.shadowColor.withOpacity(widget.glowing ? 0.5 : 0.25),
+                blurRadius: widget.glowing ? 24 : 12,
+                offset: const Offset(0, 4),
+                spreadRadius: widget.glowing ? 2 : 0,
               ),
             ],
           ),
           child: Row(
             children: [
-              Text(widget.emoji, style: const TextStyle(fontSize: 40)),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF3D2C1E),
+              Text(widget.emoji, style: const TextStyle(fontSize: 36)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF3D2C1E),
+                      ),
                     ),
-                  ),
-                  Text(
-                    widget.subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: const Color(0xFF3D2C1E).withValues(alpha: 0.6),
+                    Text(
+                      widget.subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: const Color(0xFF3D2C1E).withOpacity(0.5),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const Spacer(),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: const Color(0xFF3D2C1E).withValues(alpha: 0.4),
-              ),
+              if (widget.locked)
+                Icon(Icons.lock_rounded,
+                    color: const Color(0xFF3D2C1E).withOpacity(0.3), size: 22)
+              else
+                Icon(Icons.arrow_forward_ios_rounded,
+                    color: const Color(0xFF3D2C1E).withOpacity(0.3), size: 18),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-/// HLCスコア表示バー
-class _HlcScoreBar extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final score = ref.watch(hlcScoreProvider);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _ScoreChip(label: 'H 奉仕', value: score.hospitality, color: MaColors.hiyokoPink),
-          _ScoreChip(label: 'L 論理', value: score.logic, color: MaColors.penguinDeep),
-          _ScoreChip(label: 'C 創造', value: score.creativity, color: MaColors.lionGold),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              gradient: MaColors.goldGradient,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'Lv.${score.level.name}',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF5C3D10),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ScoreChip extends StatelessWidget {
-  final String label;
-  final int value;
-  final Color color;
-
-  const _ScoreChip({required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
-        ),
-        Text(
-          '$value',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color),
-        ),
-      ],
     );
   }
 }
