@@ -10,7 +10,6 @@ import '../../providers/hlc_provider.dart';
 import '../../services/memory_database.dart';
 import '../../theme/ma_colors.dart';
 import '../../widgets/coloring_canvas.dart';
-import '../../widgets/gaogao_reaction.dart';
 
 /// ぬりえモード — 描く→保存→日記に投稿→親のマンダラ「🎨つくった」に蓄積
 class ColoringScreen extends ConsumerStatefulWidget {
@@ -60,12 +59,15 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
 
     if (!mounted) return;
 
-    // ガオガオリアクション
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => GaogaoReaction(onComplete: () => Navigator.pop(context)),
+    // 完了メッセージ
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('😆 すごい！きろくできたよ！'),
+        backgroundColor: MaColors.gold,
+        duration: const Duration(seconds: 2),
+      ),
     );
+    await Future.delayed(const Duration(seconds: 1));
     if (mounted) Navigator.pop(context);
   }
 
