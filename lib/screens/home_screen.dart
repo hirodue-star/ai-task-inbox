@@ -6,6 +6,7 @@ import '../painters/recursive_world_painter.dart';
 import '../providers/hlc_provider.dart';
 import '../providers/world_provider.dart';
 import '../providers/ambient_provider.dart';
+import '../providers/memory_provider.dart';
 import '../theme/ma_colors.dart';
 import '../widgets/world_restore_bar.dart';
 import 'hiyoko/hiyoko_home.dart';
@@ -44,6 +45,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final world = ref.watch(worldStateProvider);
     final score = ref.watch(hlcScoreProvider);
     final ambient = ref.watch(ambientProvider);
+    final challengeCount = ref.watch(challengeCountProvider).valueOrNull ?? 0;
 
     return Scaffold(
       body: AnimatedBuilder(
@@ -55,6 +57,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               evolution: world.evolutionStage,
               animValue: _bgController.value,
               abyssIntensity: world.abyssIntensity,
+              challengeCount: challengeCount,
             ),
             foregroundPainter: RecursiveWorldPainter(
               actionSeed: world.totalActions,

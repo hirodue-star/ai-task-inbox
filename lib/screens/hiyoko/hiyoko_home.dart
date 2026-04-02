@@ -4,6 +4,7 @@ import '../../painters/gaogao_painter.dart';
 import '../../widgets/squishy_button.dart';
 import '../../theme/ma_colors.dart';
 import 'hiyoko_otetsudai.dart';
+import 'memory_input_screen.dart';
 
 /// 🐣 ひよこ級ホーム — ぷにぷにボタン4つ + ガオガオ表示
 class HiyokoHome extends StatefulWidget {
@@ -42,6 +43,10 @@ class _HiyokoHomeState extends State<HiyokoHome>
       // おてつだいボタン
       Navigator.push(context,
         MaterialPageRoute(builder: (_) => const HiyokoOtetsudai()));
+    } else if (index == 3) {
+      // ぼうけんボタン → 記憶の記録
+      Navigator.push(context,
+        MaterialPageRoute(builder: (_) => const MemoryInputScreen()));
     }
   }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../painters/background_painter.dart';
+import '../services/memory_database.dart';
 import '../theme/ma_colors.dart';
 import 'home_screen.dart';
+import 'time_travel_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -43,8 +45,28 @@ class _SplashScreenState extends State<SplashScreen>
 
     _fadeController.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
+    Future.delayed(const Duration(seconds: 3), () async {
+      if (!mounted) return;
+      // 昨日の記憶があれば → タイムトラベル画面
+      final yesterday = await MemoryDatabase.getYesterday();
+      if (!mounted) return;
+      if (yesterday.isNotEmpty) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => TimeTravelScreen(
+              onComplete: () {
+                Navigator.of(_).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                );
+              },
+            ),
+            transitionDuration: const Duration(milliseconds: 800),
+            transitionsBuilder: (_, anim, __, child) {
+              return FadeTransition(opacity: anim, child: child);
+            },
+          ),
+        );
+      } else {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const HomeScreen(),

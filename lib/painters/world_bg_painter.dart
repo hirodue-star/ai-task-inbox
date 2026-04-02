@@ -9,12 +9,14 @@ class WorldBgPainter extends CustomPainter {
   final EvolutionStage evolution;
   final double animValue;
   final double abyssIntensity;
+  final int challengeCount; // 挑戦の記憶数 → 永続黄金粒子
 
   WorldBgPainter({
     required this.phase,
     required this.evolution,
     required this.animValue,
     this.abyssIntensity = 0,
+    this.challengeCount = 0,
   });
 
   @override
@@ -22,6 +24,7 @@ class WorldBgPainter extends CustomPainter {
     _drawSky(canvas, size);
     _drawCelestialBody(canvas, size);
     _drawEvolution(canvas, size);
+    _drawChallengeParticles(canvas, size);
     _drawAbyss(canvas, size);
   }
 
@@ -340,6 +343,35 @@ class WorldBgPainter extends CustomPainter {
     }
   }
 
+  /// 挑戦の記憶から生まれた永続黄金粒子
+  void _drawChallengeParticles(Canvas canvas, Size size) {
+    if (challengeCount <= 0) return;
+    final rng = math.Random(challengeCount * 7);
+    final count = (challengeCount * 3).clamp(0, 30);
+
+    for (var i = 0; i < count; i++) {
+      final x = rng.nextDouble() * size.width;
+      final baseY = rng.nextDouble() * size.height * 0.7;
+      final y = baseY - (animValue * 30 * (0.5 + rng.nextDouble())) % 50;
+      final r = 1.0 + rng.nextDouble() * 2;
+      final pulse = (math.sin(animValue * math.pi * 2 + i * 0.9) + 1) / 2;
+      final paint = Paint()
+        ..color = MaColors.lionGold.withOpacity(0.15 + pulse * 0.25);
+      canvas.drawCircle(Offset(x, y), r, paint);
+
+      if (r > 1.5) {
+        final glow = Paint()
+          ..shader = RadialGradient(
+            colors: [
+              MaColors.lionGold.withOpacity(0.04 * pulse),
+              MaColors.lionGold.withOpacity(0),
+            ],
+          ).createShader(Rect.fromCircle(center: Offset(x, y), radius: r * 4));
+        canvas.drawCircle(Offset(x, y), r * 4, glow);
+      }
+    }
+  }
+
   /// 深海の渦（ペンギン級への伏線）
   void _drawAbyss(Canvas canvas, Size size) {
     if (abyssIntensity <= 0.01) return;
@@ -402,5 +434,6 @@ class WorldBgPainter extends CustomPainter {
       phase != old.phase ||
       evolution != old.evolution ||
       animValue != old.animValue ||
-      abyssIntensity != old.abyssIntensity;
+      abyssIntensity != old.abyssIntensity ||
+      challengeCount != old.challengeCount;
 }
