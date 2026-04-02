@@ -12,6 +12,7 @@ import '../screens/parent/parental_control.dart';
 import '../screens/echo/welcome_back_screen.dart';
 import '../screens/echo/daily_theater_screen.dart';
 import '../screens/teacher/teacher_interface.dart';
+import '../screens/guardian/adventure_map_screen.dart';
 
 /// スワイプで開くサイドメニュー — レベルに応じて項目変化
 class AdaptiveDrawer extends ConsumerWidget {
@@ -107,6 +108,12 @@ class AdaptiveDrawer extends ConsumerWidget {
                 onTap: () => _navigate(context, const ColoringScreen()),
               ),
 
+              _NavItem(
+                icon: Icons.map_rounded,
+                label: 'ぼうけんちず',
+                subtitle: '冒険地図 & 見守り',
+                onTap: () => _navigate(context, const AdventureMapScreen()),
+              ),
               _NavItem(
                 icon: Icons.nightlight_round,
                 label: 'きょうの連載',
