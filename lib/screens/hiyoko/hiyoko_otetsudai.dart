@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../painters/background_painter.dart';
 import '../../painters/gaogao_painter.dart';
+import '../../providers/hlc_provider.dart';
 import '../../theme/ma_colors.dart';
+import '../../widgets/hyokkori_frame.dart';
 
 /// 🐣 ひよこ級：お手伝い記録画面
-class HiyokoOtetsudai extends StatefulWidget {
+class HiyokoOtetsudai extends ConsumerStatefulWidget {
   const HiyokoOtetsudai({super.key});
 
   @override
-  State<HiyokoOtetsudai> createState() => _HiyokoOtetsudaiState();
+  ConsumerState<HiyokoOtetsudai> createState() => _HiyokoOtetsudaiState();
 }
 
-class _HiyokoOtetsudaiState extends State<HiyokoOtetsudai>
+class _HiyokoOtetsudaiState extends ConsumerState<HiyokoOtetsudai>
     with SingleTickerProviderStateMixin {
   late AnimationController _bgController;
   final List<_OtetsudaiItem> _items = [
@@ -142,6 +145,9 @@ class _HiyokoOtetsudaiState extends State<HiyokoOtetsudai>
   }
 
   void _showCompletionDialog() {
+    // HLCスコア加算（奉仕ポイント）
+    ref.read(hlcScoreProvider.notifier).completeHelp(points: 10);
+
     showDialog(
       context: context,
       builder: (ctx) => Dialog(

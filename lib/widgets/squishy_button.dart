@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import '../theme/ma_colors.dart';
 
 /// 🐣 ひよこ級：ぷにぷにマシュマロボタン
@@ -30,19 +31,34 @@ class _SquishyButtonState extends State<SquishyButton>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 120),
-    );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _controller = AnimationController.unbounded(vsync: this);
+    _scaleAnim = AlwaysStoppedAnimation(1.0);
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _pressDown() {
+    setState(() => _pressed = true);
+    _controller.stop();
+    _controller.value = 0.9;
+    _scaleAnim = AlwaysStoppedAnimation(0.9);
+  }
+
+  void _releaseSpring() {
+    setState(() => _pressed = false);
+    // SpringSimulation: 弾力のある戻り
+    final spring = SpringDescription(
+      mass: 1.0,
+      stiffness: 400.0,
+      damping: 12.0,
+    );
+    final sim = SpringSimulation(spring, 0.9, 1.0, 0);
+    _scaleAnim = _controller.drive(Tween(begin: 0.9, end: 1.0));
+    _controller.animateWith(sim);
   }
 
   @override
@@ -52,19 +68,12 @@ class _SquishyButtonState extends State<SquishyButton>
     final darker = Color.lerp(widget.color, Colors.black, 0.25)!;
 
     return GestureDetector(
-      onTapDown: (_) {
-        setState(() => _pressed = true);
-        _controller.forward();
-      },
+      onTapDown: (_) => _pressDown(),
       onTapUp: (_) {
-        setState(() => _pressed = false);
-        _controller.reverse();
+        _releaseSpring();
         widget.onTap?.call();
       },
-      onTapCancel: () {
-        setState(() => _pressed = false);
-        _controller.reverse();
-      },
+      onTapCancel: () => _releaseSpring(),
       child: AnimatedBuilder(
         animation: _scaleAnim,
         builder: (context, child) {

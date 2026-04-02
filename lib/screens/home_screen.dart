@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../painters/background_painter.dart';
+import '../providers/hlc_provider.dart';
+import '../models/hlc_score.dart';
 import '../theme/ma_colors.dart';
 import 'hiyoko/hiyoko_home.dart';
 import 'lion/lion_home.dart';
 
-/// ホーム画面：級選択
-class HomeScreen extends StatefulWidget {
+/// ホーム画面：級選択 + HLCスコア表示
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _bgController;
 
@@ -58,12 +61,15 @@ class _HomeScreenState extends State<HomeScreen>
                     letterSpacing: 4,
                   ),
                 ),
+                const SizedBox(height: 12),
+                // HLCスコアバー
+                _HlcScoreBar(),
                 const SizedBox(height: 8),
                 const Text(
                   'レベルをえらんでね',
                   style: TextStyle(fontSize: 16, color: Color(0xFF8B7355)),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
                 // 級選択カード
                 _LevelCard(
                   title: 'ひよこ級',
@@ -211,6 +217,71 @@ class _LevelCardState extends State<_LevelCard>
           ),
         ),
       ),
+    );
+  }
+}
+
+/// HLCスコア表示バー
+class _HlcScoreBar extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final score = ref.watch(hlcScoreProvider);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _ScoreChip(label: 'H 奉仕', value: score.hospitality, color: MaColors.hiyokoPink),
+          _ScoreChip(label: 'L 論理', value: score.logic, color: MaColors.penguinDeep),
+          _ScoreChip(label: 'C 創造', value: score.creativity, color: MaColors.lionGold),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: MaColors.goldGradient,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Lv.${score.level.name}',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF5C3D10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScoreChip extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+
+  const _ScoreChip({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+        ),
+        Text(
+          '$value',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color),
+        ),
+      ],
     );
   }
 }

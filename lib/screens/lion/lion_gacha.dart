@@ -1,18 +1,21 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../painters/background_painter.dart';
+import '../../painters/particle_painter.dart';
+import '../../providers/hlc_provider.dart';
 import '../../widgets/gacha_capsule.dart';
 import '../../theme/ma_colors.dart';
 
 /// 🦁 ライオン級：ガチャ演出画面
-class LionGacha extends StatefulWidget {
+class LionGacha extends ConsumerStatefulWidget {
   const LionGacha({super.key});
 
   @override
-  State<LionGacha> createState() => _LionGachaState();
+  ConsumerState<LionGacha> createState() => _LionGachaState();
 }
 
-class _LionGachaState extends State<LionGacha>
+class _LionGachaState extends ConsumerState<LionGacha>
     with TickerProviderStateMixin {
   late AnimationController _bgController;
   late AnimationController _sequenceController;
@@ -74,6 +77,13 @@ class _LionGachaState extends State<LionGacha>
     _reward = _rewards[rng.nextInt(_rewards.length)];
     setState(() => _phase = _GachaPhase.animating);
     _sequenceController.forward(from: 0);
+
+    // ガチャ報酬としてHLCスコア加算
+    ref.read(hlcScoreProvider.notifier).gachaReward(
+      h: rng.nextInt(5) + 1,
+      l: rng.nextInt(5) + 1,
+      c: rng.nextInt(5) + 1,
+    );
   }
 
   void _reset() {
@@ -166,6 +176,12 @@ class _LionGachaState extends State<LionGacha>
                               isOpening: _phase == _GachaPhase.animating &&
                                   _sequenceController.value > 0.3,
                             ),
+                          ),
+
+                        // 黄金パーティクル
+                        if (_phase == _GachaPhase.result)
+                          const Positioned.fill(
+                            child: GoldParticleBurst(trigger: true, particleCount: 60),
                           ),
 
                         // 結果表示

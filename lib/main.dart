@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/splash_screen.dart';
 import 'theme/ma_colors.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  runApp(const MaLogicApp());
+
+  // Firebase初期化（firebase_options.dart が生成されたら有効化）
+  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // await FcmService.initialize();
+
+  runApp(const ProviderScope(child: MaLogicApp()));
 }
 
 class MaLogicApp extends StatelessWidget {
