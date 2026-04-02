@@ -8,6 +8,7 @@ import '../../models/memory_entry.dart';
 import '../../providers/hlc_provider.dart';
 import '../../services/memory_database.dart';
 import '../../services/manga_converter.dart';
+import '../../services/thinking_engine.dart';
 import '../../theme/ma_colors.dart';
 import '../../widgets/gaogao_reaction.dart';
 
@@ -27,6 +28,12 @@ class _MemoryInputScreenState extends ConsumerState<MemoryInputScreen> {
   String? _mangaPath;
   bool _saving = false;
   bool _converting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -192,6 +199,59 @@ class _MemoryInputScreenState extends ConsumerState<MemoryInputScreen> {
                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: MaColors.gold)),
                 ),
               ),
+
+              // 擬音語サジェスト
+              if (_selectedStamp != null && _textController.text.length > 3)
+                Builder(builder: (_) {
+                  final suggestions = ExpressionEnhancer.suggestOnomatopoeia(
+                    _textController.text, _selectedStamp!);
+                  if (suggestions.isEmpty) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Wrap(
+                      spacing: 6,
+                      children: suggestions.map((s) => GestureDetector(
+                        onTap: () {
+                          _textController.text = '${_textController.text} $s';
+                          _textController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _textController.text.length));
+                          setState(() {});
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: MaColors.gold.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: MaColors.gold.withOpacity(0.3)),
+                          ),
+                          child: Text(s, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF5C3D10))),
+                        ),
+                      )).toList(),
+                    ),
+                  );
+                }),
+
+              // Why検出フィードバック
+              if (WhyDetector.hasReasoning(_textController.text))
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: MaColors.goldGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('✨', style: TextStyle(fontSize: 16)),
+                        SizedBox(width: 6),
+                        Text('りゆうをかんがえたね！すごい！',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF5C3D10))),
+                      ],
+                    ),
+                  ),
+                ),
 
               const SizedBox(height: 24),
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/memory_entry.dart';
 import '../../providers/hlc_provider.dart';
 import '../../services/memory_database.dart';
+import '../../services/thinking_engine.dart';
 import '../../theme/ma_colors.dart';
 
 /// 親ダッシュボード — マンダラ9マス + エピソードポップアップ
@@ -17,6 +18,7 @@ class ParentDashboard extends ConsumerStatefulWidget {
 class _ParentDashboardState extends ConsumerState<ParentDashboard> {
   List<MemoryEntry> _all = [];
   Map<int, List<MemoryEntry>> _byCell = {};
+  bool _centerGlows = false;
 
   @override
   void initState() {
@@ -27,10 +29,12 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
   Future<void> _load() async {
     final all = await MemoryDatabase.getAll();
     final byCell = <int, List<MemoryEntry>>{};
+    var hasWhy = false;
     for (final m in all) {
       byCell.putIfAbsent(m.mandalaCell, () => []).add(m);
+      if (WhyDetector.hasReasoning(m.text)) hasWhy = true;
     }
-    setState(() { _all = all; _byCell = byCell; });
+    setState(() { _all = all; _byCell = byCell; _centerGlows = hasWhy; });
   }
 
   @override
@@ -85,8 +89,8 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                     _MandalaCell(cell: 2, stamp: MemoryStamp.logic, entries: _byCell[2] ?? [], onTap: () => _showEntries(2)),
                     _MandalaCell(cell: 3, stamp: MemoryStamp.creation, entries: _byCell[3] ?? [], onTap: () => _showEntries(3)),
                     _MandalaCell(cell: 4, stamp: MemoryStamp.discovery, entries: _byCell[4] ?? [], onTap: () => _showEntries(4)),
-                    // 中央: 総合
-                    _MandalaCenterCell(total: _all.length, likeCount: score.likeCount),
+                    // 中央: 総合（Why検出時に黄金発光）
+                    _MandalaCenterCell(total: _all.length, likeCount: score.likeCount, glowing: _centerGlows),
                     _MandalaCell(cell: 5, stamp: MemoryStamp.challenge, entries: _byCell[5] ?? [], onTap: () => _showEntries(5)),
                     _MandalaCell(cell: 6, stamp: MemoryStamp.expression, entries: _byCell[6] ?? [], onTap: () => _showEntries(6)),
                     _MandalaCell(cell: 7, stamp: MemoryStamp.helping, entries: _byCell[7] ?? [], onTap: () => _showEntries(7)),
@@ -258,17 +262,21 @@ class _MandalaCell extends StatelessWidget {
 class _MandalaCenterCell extends StatelessWidget {
   final int total;
   final int likeCount;
-  const _MandalaCenterCell({required this.total, required this.likeCount});
+  final bool glowing;
+  const _MandalaCenterCell({required this.total, required this.likeCount, this.glowing = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [MaColors.gold.withOpacity(0.15), MaColors.gold.withOpacity(0.05)],
+          colors: glowing
+              ? [MaColors.gold.withOpacity(0.4), MaColors.gold.withOpacity(0.2)]
+              : [MaColors.gold.withOpacity(0.15), MaColors.gold.withOpacity(0.05)],
         ),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: MaColors.gold.withOpacity(0.5)),
+        border: Border.all(color: MaColors.gold.withOpacity(glowing ? 0.9 : 0.5), width: glowing ? 2 : 1),
+        boxShadow: glowing ? [BoxShadow(color: MaColors.gold.withOpacity(0.4), blurRadius: 12)] : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

@@ -5,6 +5,7 @@ import '../models/memory_entry.dart';
 import '../providers/hlc_provider.dart';
 import '../services/memory_database.dart';
 import '../theme/ma_colors.dart';
+import '../services/thinking_engine.dart';
 import 'hiyoko/memory_input_screen.dart';
 import 'hiyoko/coloring_screen.dart';
 import 'parent/parent_dashboard.dart';
@@ -72,7 +73,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // デイリーミッション（ガオガオから）
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: MaColors.gold.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Text('😆', style: TextStyle(fontSize: 28)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      todaysMission().message,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF5C3D10), height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
 
             // タイムライン
             Expanded(
