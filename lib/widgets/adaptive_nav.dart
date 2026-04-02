@@ -9,6 +9,9 @@ import '../screens/manga/coloring_screen.dart';
 import '../screens/parent/parent_dashboard.dart';
 import '../screens/collection_book_screen.dart';
 import '../screens/parent/parental_control.dart';
+import '../screens/echo/welcome_back_screen.dart';
+import '../screens/echo/daily_theater_screen.dart';
+import '../screens/teacher/teacher_interface.dart';
 
 /// スワイプで開くサイドメニュー — レベルに応じて項目変化
 class AdaptiveDrawer extends ConsumerWidget {
@@ -104,6 +107,13 @@ class AdaptiveDrawer extends ConsumerWidget {
                 onTap: () => _navigate(context, const ColoringScreen()),
               ),
 
+              _NavItem(
+                icon: Icons.nightlight_round,
+                label: 'きょうの連載',
+                subtitle: '1日のふりかえりシアター',
+                onTap: () => _navigate(context, const DailyTheaterScreen()),
+              ),
+
               if (userLevel.level >= 3) ...[
                 const Divider(height: 32),
                 _NavItem(
@@ -126,7 +136,14 @@ class AdaptiveDrawer extends ConsumerWidget {
 
               const Divider(height: 24),
 
-              // ペアレンタルコントロール
+              // 保育士・親ツール
+              _NavItem(
+                icon: Icons.school_rounded,
+                label: 'Teacher Palette',
+                subtitle: '保育士用クイックスタンプ',
+                badge: 'NEW',
+                onTap: () => _navigate(context, const TeacherInterface()),
+              ),
               _NavItem(
                 icon: Icons.shield_rounded,
                 label: 'ペアレンタル・コントロール',
