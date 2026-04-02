@@ -10,6 +10,7 @@ import '../../services/ai_illust_service.dart';
 import '../../models/bond_post.dart';
 import '../../providers/bond_provider.dart';
 import '../../theme/ma_colors.dart';
+import '../../widgets/ai_interview_dialog.dart';
 
 /// 🐣 メモリー・インプット画面
 /// 食べた/行った/遊んだ/ペット/挑戦 のスタンプ + テキスト + カメラ
@@ -94,6 +95,27 @@ class _MemoryInputScreenState extends ConsumerState<MemoryInputScreen>
     }
 
     setState(() => _saving = false);
+
+    if (!mounted) return;
+
+    // AIインタビュー（言語化トレーニング）
+    final interviewAnswers = await showDialog<List<String>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AiInterviewDialog(
+        stamp: stamp,
+        originalText: text,
+        onComplete: (answers) => Navigator.pop(context, answers),
+      ),
+    );
+
+    // インタビュー回答でLスコア加算
+    if (interviewAnswers != null) {
+      final answered = interviewAnswers.where((a) => a.isNotEmpty).length;
+      if (answered > 0) {
+        ref.read(hlcScoreProvider.notifier).recordThought(points: answered * 3);
+      }
+    }
 
     if (!mounted) return;
     _showSavedDialog(entry, aiUrl);

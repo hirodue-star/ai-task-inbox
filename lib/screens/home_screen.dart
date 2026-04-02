@@ -13,6 +13,8 @@ import 'hiyoko/hiyoko_home.dart';
 import 'penguin/penguin_home.dart';
 import 'lion/lion_home.dart';
 import 'bond/bond_feed_screen.dart';
+import 'parent/parent_dashboard.dart';
+import 'collection_book_screen.dart';
 
 /// ホーム画面：動的世界背景 + 級選択 + 世界復元率
 class HomeScreen extends ConsumerStatefulWidget {
@@ -175,37 +177,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
                 const Spacer(),
 
-                // BOND-LOGボタン
-                GestureDetector(
-                  onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const BondFeedScreen())),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.15)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.people_rounded, size: 18, color: _textColor(world.phase).withOpacity(0.6)),
-                        const SizedBox(width: 8),
-                        Text(
-                          'BOND-LOG',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: _textColor(world.phase).withOpacity(0.7),
-                            letterSpacing: 2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                // 下部メニュー
+                Row(
+                  children: [
+                    Expanded(child: _BottomButton(
+                      icon: Icons.people_rounded, label: 'BOND-LOG',
+                      color: _textColor(world.phase),
+                      onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const BondFeedScreen())),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: _BottomButton(
+                      icon: Icons.auto_stories_rounded, label: 'コレクション',
+                      color: _textColor(world.phase),
+                      onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const CollectionBookScreen())),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: _BottomButton(
+                      icon: Icons.bar_chart_rounded, label: '成長',
+                      color: _textColor(world.phase),
+                      onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const ParentDashboard())),
+                    )),
+                  ],
                 ),
+                const SizedBox(height: 8),
 
                 // 深海の渦のヒント
                 if (world.abyssIntensity > 0.1 && world.abyssIntensity < 0.3)
@@ -372,6 +369,37 @@ class _ScoreChip extends StatelessWidget {
         const SizedBox(width: 2),
         Text('$value', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
       ],
+    );
+  }
+}
+
+class _BottomButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _BottomButton({required this.icon, required this.label, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: color.withOpacity(0.6)),
+            const SizedBox(height: 2),
+            Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color.withOpacity(0.5))),
+          ],
+        ),
+      ),
     );
   }
 }
