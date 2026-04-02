@@ -5,6 +5,7 @@ import '../providers/hlc_provider.dart';
 import '../models/hlc_score.dart';
 import '../theme/ma_colors.dart';
 import 'hiyoko/hiyoko_home.dart';
+import 'penguin/penguin_home.dart';
 import 'lion/lion_home.dart';
 
 /// ホーム画面：級選択 + HLCスコア表示
@@ -91,7 +92,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     colors: [Color(0xFFE8F4FF), Color(0xFFD0E8FF)],
                   ),
                   shadowColor: MaColors.penguinDeep,
-                  onTap: () {}, // TODO: ペンギン級画面
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const PenguinHome())),
                 ),
                 const SizedBox(height: 20),
                 _LevelCard(
