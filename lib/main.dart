@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/splash_screen.dart';
 import 'services/fcm_service.dart';
+import 'services/batch_processor.dart';
 import 'theme/ma_colors.dart';
 import 'widgets/hyokkori_frame.dart';
 
@@ -16,6 +17,8 @@ void main() async {
   // Firebase初期化（firebase_options.dart が生成されたら有効化）
   // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FcmService.initialize();
+  // バッチ処理（起動時、6時間間隔）
+  BatchProcessor.runStartupBatch();
 
   // 親からの承認 → 全画面を貫通してひょっこりフレーム表示
   FcmService.onParentApproval = () {

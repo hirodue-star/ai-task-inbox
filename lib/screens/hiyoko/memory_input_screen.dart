@@ -9,8 +9,10 @@ import '../../services/memory_database.dart';
 import '../../services/ai_illust_service.dart';
 import '../../models/bond_post.dart';
 import '../../providers/bond_provider.dart';
+import '../../services/cost_guard.dart';
 import '../../theme/ma_colors.dart';
 import '../../widgets/ai_interview_dialog.dart';
+import '../paywall_screen.dart';
 
 /// 🐣 メモリー・インプット画面
 /// 食べた/行った/遊んだ/ペット/挑戦 のスタンプ + テキスト + カメラ
@@ -47,6 +49,21 @@ class _MemoryInputScreenState extends ConsumerState<MemoryInputScreen>
 
   Future<void> _save() async {
     if (_selectedStamp == null || _textController.text.trim().isEmpty) return;
+
+    // ペイウォールチェック
+    final status = await CostGuard.checkFreeTier();
+    if (status == FreeTierStatus.paywallRequired) {
+      if (!mounted) return;
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => PaywallScreen(
+          onSubscribed: () => Navigator.pop(context),
+          onDismiss: () => Navigator.pop(context),
+        ),
+      ));
+      return;
+    }
+    await CostGuard.incrementPostCount();
+
     setState(() => _saving = true);
 
     final stamp = _selectedStamp!;
