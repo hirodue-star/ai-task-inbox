@@ -1,12 +1,15 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 /// デジタルぬりえキャンバス — 巧緻性トレーニング
 /// 線画の上から指で色を塗る
 class ColoringCanvas extends StatefulWidget {
   final double width;
   final double height;
+  final GlobalKey? captureKey; // 外部からキャプチャ用キーを渡す
 
-  const ColoringCanvas({super.key, required this.width, required this.height});
+  const ColoringCanvas({super.key, required this.width, required this.height, this.captureKey});
 
   @override
   State<ColoringCanvas> createState() => _ColoringCanvasState();
@@ -36,7 +39,9 @@ class _ColoringCanvasState extends State<ColoringCanvas> {
     return Column(
       children: [
         // キャンバス
-        ClipRRect(
+        RepaintBoundary(
+          key: widget.captureKey,
+          child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: GestureDetector(
             onPanStart: (d) {
@@ -76,7 +81,7 @@ class _ColoringCanvasState extends State<ColoringCanvas> {
               ),
             ),
           ),
-        ),
+        )),
 
         const SizedBox(height: 12),
 
