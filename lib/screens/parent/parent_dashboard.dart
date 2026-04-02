@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/hlc_provider.dart';
 import '../../providers/world_provider.dart';
 import '../../models/hlc_score.dart';
+import '../../services/growth_analytics.dart';
+import '../../services/export_service.dart';
 import '../../theme/ma_colors.dart';
 
 /// 親用ダッシュボード — HLC成長グラフ + 統計
@@ -245,6 +247,113 @@ class ParentDashboard extends ConsumerWidget {
                   ],
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              // AI強み分析（5つの強み）
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12)],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'AI強み分析',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF2C3E50)),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text('願書活用', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    FutureBuilder<List<StrengthAnalysis>>(
+                      future: GrowthAnalytics.analyzeStrengths(score),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                        return Column(
+                          children: snapshot.data!.map((s) => _StrengthCard(strength: s)).toList(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // エクスポート
+              GestureDetector(
+                onTap: () async {
+                  final json = await ExportService.exportToJson();
+                  final report = await ExportService.checkIntegrity();
+                  if (!context.mounted) return;
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => Dialog(
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.backup_rounded, size: 40, color: Color(0xFF4CAF50)),
+                            const SizedBox(height: 12),
+                            const Text('データバックアップ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 8),
+                            Text('記憶: ${report.totalMemories}件\n思考: ${report.totalThoughts}件\n状態: ${report.isHealthy ? "正常" : "要確認"}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 13, color: const Color(0xFF2C3E50).withOpacity(0.6)),
+                            ),
+                            const SizedBox(height: 8),
+                            Text('JSONサイズ: ${(json.length / 1024).toStringAsFixed(1)} KB',
+                              style: TextStyle(fontSize: 11, color: const Color(0xFF2C3E50).withOpacity(0.4)),
+                            ),
+                            const SizedBox(height: 16),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(ctx),
+                              child: const Text('閉じる'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.backup_rounded, size: 18, color: Color(0xFF4CAF50)),
+                      SizedBox(width: 8),
+                      Text('データバックアップ & 整合性チェック',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF4CAF50)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -424,6 +533,64 @@ class _PrepIndicator extends StatelessWidget {
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF2C3E50).withOpacity(0.5)),
         ),
       ],
+    );
+  }
+}
+
+class _StrengthCard extends StatelessWidget {
+  final StrengthAnalysis strength;
+  const _StrengthCard({required this.strength});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F8F8),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(strength.icon, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+              Text(strength.name,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF2C3E50))),
+              const Spacer(),
+              Text('${(strength.level * 100).toInt()}%',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF2C3E50).withOpacity(0.5))),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: strength.level,
+              minHeight: 4,
+              backgroundColor: const Color(0xFFEEEEEE),
+              valueColor: AlwaysStoppedAnimation(
+                Color.lerp(const Color(0xFFFFAA66), const Color(0xFF4CAF50), strength.level)!,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(strength.description,
+            style: TextStyle(fontSize: 12, color: const Color(0xFF2C3E50).withOpacity(0.6), height: 1.4)),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text('📝 ${strength.admissionNote}',
+              style: TextStyle(fontSize: 10, color: const Color(0xFFE65100).withOpacity(0.7))),
+          ),
+        ],
+      ),
     );
   }
 }
