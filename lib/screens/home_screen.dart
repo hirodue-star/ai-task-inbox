@@ -15,6 +15,8 @@ import 'lion/lion_home.dart';
 import 'bond/bond_feed_screen.dart';
 import 'parent/parent_dashboard.dart';
 import 'collection_book_screen.dart';
+import 'manga/coloring_screen.dart';
+import 'manga/comic_album_screen.dart';
 
 /// ホーム画面：動的世界背景 + 級選択 + 世界復元率
 class HomeScreen extends ConsumerStatefulWidget {
@@ -188,10 +190,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     )),
                     const SizedBox(width: 8),
                     Expanded(child: _BottomButton(
-                      icon: Icons.auto_stories_rounded, label: 'コレクション',
+                      icon: Icons.menu_book_rounded, label: 'マンガ',
                       color: _textColor(world.phase),
                       onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const CollectionBookScreen())),
+                        MaterialPageRoute(builder: (_) => const ComicAlbumScreen())),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: _BottomButton(
+                      icon: Icons.brush_rounded, label: 'ぬりえ',
+                      color: _textColor(world.phase),
+                      onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const ColoringScreen())),
                     )),
                     const SizedBox(width: 8),
                     Expanded(child: _BottomButton(
