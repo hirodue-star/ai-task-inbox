@@ -7,6 +7,8 @@ import '../../providers/world_provider.dart';
 import '../../providers/hlc_provider.dart';
 import '../../services/memory_database.dart';
 import '../../services/ai_illust_service.dart';
+import '../../models/bond_post.dart';
+import '../../providers/bond_provider.dart';
 import '../../theme/ma_colors.dart';
 
 /// 🐣 メモリー・インプット画面
@@ -68,6 +70,16 @@ class _MemoryInputScreenState extends ConsumerState<MemoryInputScreen>
     );
 
     await MemoryDatabase.insert(entry);
+
+    // BOND-LOGに投稿（日記 = シェア）
+    final mission = ref.read(dailyMissionProvider);
+    final bondPost = BondPost.fromMemory(
+      entry,
+      authorId: 'child_1',
+      authorName: 'ガオガオ',
+      missionTag: stamp == mission.relatedStamp ? mission.tag : null,
+    );
+    ref.read(bondFeedProvider.notifier).publish(bondPost);
 
     // 世界復元率UP
     ref.read(worldStateProvider.notifier).performAction(

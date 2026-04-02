@@ -12,6 +12,7 @@ import '../widgets/world_restore_bar.dart';
 import 'hiyoko/hiyoko_home.dart';
 import 'penguin/penguin_home.dart';
 import 'lion/lion_home.dart';
+import 'bond/bond_feed_screen.dart';
 
 /// ホーム画面：動的世界背景 + 級選択 + 世界復元率
 class HomeScreen extends ConsumerStatefulWidget {
@@ -173,6 +174,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
 
                 const Spacer(),
+
+                // BOND-LOGボタン
+                GestureDetector(
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const BondFeedScreen())),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.15)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.people_rounded, size: 18, color: _textColor(world.phase).withOpacity(0.6)),
+                        const SizedBox(width: 8),
+                        Text(
+                          'BOND-LOG',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _textColor(world.phase).withOpacity(0.7),
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
                 // 深海の渦のヒント
                 if (world.abyssIntensity > 0.1 && world.abyssIntensity < 0.3)
