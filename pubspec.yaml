@@ -12,7 +12,9 @@ dev_dependencies:
     sdk: flutter
 flutter:
   uses-material-design: true
-  assets:
-    - assets/images/hiyoko/
-    - assets/images/lion/
-    - assets/images/bond/
+  # アセットはCustomPainter/BoxDecorationでコード描画に移行
+  # PNGフォールバック用に残すが、コード描画が優先
+  # assets:
+  #   - assets/images/hiyoko/
+  #   - assets/images/lion/
+  #   - assets/images/bond/
