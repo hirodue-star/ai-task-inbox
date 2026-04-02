@@ -9,6 +9,7 @@ import '../models/memory_entry.dart';
 import '../providers/hlc_provider.dart';
 import '../services/memory_database.dart';
 import '../services/manga_converter.dart';
+import '../services/share_engine.dart';
 import '../theme/ma_colors.dart';
 import 'parent/parent_dashboard.dart';
 import 'hiyoko/coloring_screen.dart';
@@ -102,9 +103,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
       ..forward();
     setState(() => _phase = _Phase.gaogao);
 
-    // 2秒後にカメラに戻る
-    await Future.delayed(const Duration(seconds: 2));
+    // 3秒後にカメラに戻る（シェア操作の猶予）
+    await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
+      // テンプ画像クリーンアップ
+      ShareEngine.cleanupTempFiles();
       setState(() {
         _phase = _Phase.camera;
         _photoPath = null;
@@ -346,6 +349,46 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                       style: TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.6)),
                     ),
                   ),
+                // シェアボタン（親用）
+                Opacity(
+                  opacity: (t * 2 - 0.5).clamp(0, 1),
+                  child: GestureDetector(
+                    onTap: () async {
+                      final imagePath = _mangaPath ?? _photoPath;
+                      if (imagePath == null) return;
+                      final branded = await ShareEngine.createBrandedImage(imagePath);
+                      final tags = await ShareEngine.generateAndCopyHashtags(
+                        stampLabel: _selectedStamp?.label ?? '',
+                        isManga: _mangaPath != null,
+                      );
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('📋 ハッシュタグをコピーしました\n$tags', maxLines: 2),
+                          backgroundColor: Colors.black87,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.share_rounded, size: 16, color: Colors.white70),
+                          SizedBox(width: 6),
+                          Text('SNSにシェア', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 // パーティクル
                 ...List.generate(8, (i) {
                   final angle = i * math.pi * 2 / 8;
