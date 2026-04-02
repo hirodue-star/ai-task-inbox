@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/world_state.dart';
+import '../../models/incubation.dart';
 import '../../painters/world_bg_painter.dart';
 import '../../painters/mandala_grid_painter.dart';
 import '../../painters/particle_painter.dart';
@@ -22,6 +23,7 @@ class _LionHomeState extends ConsumerState<LionHome>
   late AnimationController _bgController;
   int? _selectedCell;
   bool _bigBang = false;
+  final Map<int, Incubation> _incubations = {};
 
   @override
   void initState() {
@@ -49,7 +51,22 @@ class _LionHomeState extends ConsumerState<LionHome>
       setState(() => _selectedCell = cell);
       return;
     }
-    // 未完了セル → 思考を記録して完了
+    // 孵化中のセル → 進行状況を表示
+    if (_incubations.containsKey(cell)) {
+      final inc = _incubations[cell]!;
+      if (inc.isReady) {
+        // 孵化完了 → セル解放
+        setState(() => _incubations.remove(cell));
+        ref.read(worldStateProvider.notifier).completeMandalaCell(cell);
+        final world = ref.read(worldStateProvider);
+        if (world.isMandalaComplete) _triggerBigBang();
+        return;
+      }
+      setState(() => _selectedCell = cell);
+      _showIncubationStatus(inc);
+      return;
+    }
+    // 未完了セル → 思考の種を植えて孵化開始
     setState(() => _selectedCell = cell);
     _showThoughtInput(cell);
   }
@@ -143,12 +160,15 @@ class _LionHomeState extends ConsumerState<LionHome>
                 onTap: () {
                   if (controller.text.trim().isEmpty) return;
                   Navigator.pop(ctx);
-                  ref.read(worldStateProvider.notifier).completeMandalaCell(cell);
-                  // マンダラ完成チェック
-                  final world = ref.read(worldStateProvider);
-                  if (world.isMandalaComplete) {
-                    _triggerBigBang();
-                  }
+                  // 孵化開始（即座に完了しない → ツァイガルニク効果）
+                  setState(() {
+                    _incubations[cell] = Incubation(
+                      cellIndex: cell,
+                      startedAt: DateTime.now(),
+                      requiredTime: incubationTimeForCell(cell),
+                      seedThought: controller.text.trim(),
+                    );
+                  });
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
@@ -159,6 +179,88 @@ class _LionHomeState extends ConsumerState<LionHome>
                   child: const Text(
                     '刻む',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF5C3D10)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showIncubationStatus(Incubation inc) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0A0A30).withOpacity(0.95),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: MaColors.lionGold.withOpacity(0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 孵化プログレス
+              SizedBox(
+                width: 80,
+                height: 80,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: inc.progress,
+                      strokeWidth: 4,
+                      color: MaColors.lionGold,
+                      backgroundColor: MaColors.lionGold.withOpacity(0.1),
+                    ),
+                    Text(
+                      '${(inc.progress * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: MaColors.lionGold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (inc.seedThought != null)
+                Text(
+                  '「${inc.seedThought}」',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: MaColors.lionGold.withOpacity(0.7),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Text(
+                inc.statusMessage,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: MaColors.lionGold.withOpacity(0.5),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: MaColors.lionGold.withOpacity(0.3)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    inc.isReady ? '開く' : 'まつ',
+                    style: TextStyle(color: MaColors.lionGold.withOpacity(0.7)),
                   ),
                 ),
               ),

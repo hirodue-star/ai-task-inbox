@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import '../painters/fractal_painter.dart';
 import '../theme/ma_colors.dart';
 
 /// 🐣 ひよこ級：ぷにぷにマシュマロボタン
@@ -27,6 +28,7 @@ class _SquishyButtonState extends State<SquishyButton>
   late AnimationController _verticalController;
   late AnimationController _horizontalController;
   bool _pressed = false;
+  bool _showFractal = false;
 
   @override
   void initState() {
@@ -71,6 +73,10 @@ class _SquishyButtonState extends State<SquishyButton>
       onTapDown: (_) => _pressDown(),
       onTapUp: (_) {
         _releaseSpring();
+        setState(() => _showFractal = true);
+        Future.delayed(const Duration(milliseconds: 250), () {
+          if (mounted) setState(() => _showFractal = false);
+        });
         widget.onTap?.call();
       },
       onTapCancel: () => _releaseSpring(),
@@ -109,7 +115,13 @@ class _SquishyButtonState extends State<SquishyButton>
             ],
           ),
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
+              // フラクタルバースト（可変報酬）
+              if (_showFractal)
+                Positioned.fill(
+                  child: FractalBurst(trigger: true),
+                ),
               // 光沢ハイライト
               Positioned(
                 top: s * 0.1,

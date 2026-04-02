@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/world_state.dart';
 import '../painters/world_bg_painter.dart';
+import '../painters/recursive_world_painter.dart';
 import '../providers/hlc_provider.dart';
 import '../providers/world_provider.dart';
+import '../providers/ambient_provider.dart';
 import '../theme/ma_colors.dart';
 import '../widgets/world_restore_bar.dart';
 import 'hiyoko/hiyoko_home.dart';
@@ -41,6 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final world = ref.watch(worldStateProvider);
     final score = ref.watch(hlcScoreProvider);
+    final ambient = ref.watch(ambientProvider);
 
     return Scaffold(
       body: AnimatedBuilder(
@@ -52,6 +55,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               evolution: world.evolutionStage,
               animValue: _bgController.value,
               abyssIntensity: world.abyssIntensity,
+            ),
+            foregroundPainter: RecursiveWorldPainter(
+              actionSeed: world.totalActions,
+              animValue: _bgController.value,
+              windSpeed: ambient.windSpeed,
+              starCount: ambient.starCount,
             ),
             child: child,
           );
