@@ -8,6 +8,7 @@ import '../screens/manga/comic_album_screen.dart';
 import '../screens/manga/coloring_screen.dart';
 import '../screens/parent/parent_dashboard.dart';
 import '../screens/collection_book_screen.dart';
+import '../screens/parent/parental_control.dart';
 
 /// スワイプで開くサイドメニュー — レベルに応じて項目変化
 class AdaptiveDrawer extends ConsumerWidget {
@@ -122,6 +123,16 @@ class AdaptiveDrawer extends ConsumerWidget {
                   onTap: () => _navigate(context, const ParentDashboard()),
                 ),
               ],
+
+              const Divider(height: 24),
+
+              // ペアレンタルコントロール
+              _NavItem(
+                icon: Icons.shield_rounded,
+                label: 'ペアレンタル・コントロール',
+                subtitle: '利用制限・プリント・安全設定',
+                onTap: () => _navigate(context, const ParentalControlScreen()),
+              ),
 
               const Spacer(),
 
