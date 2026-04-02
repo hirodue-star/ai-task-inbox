@@ -76,14 +76,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Expanded(
               child: _memories.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.auto_stories_rounded, size: 48, color: const Color(0xFF5C3D10).withOpacity(0.15)),
-                          const SizedBox(height: 8),
-                          Text('最初の思い出を記録しよう',
-                            style: TextStyle(fontSize: 15, color: const Color(0xFF5C3D10).withOpacity(0.3))),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 80, height: 80,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: MaColors.gold.withOpacity(0.1),
+                              ),
+                              child: const Center(child: Text('🐣', style: TextStyle(fontSize: 36))),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('はじめての思い出を\nきろくしよう！',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF5C3D10))),
+                            const SizedBox(height: 8),
+                            Text('下の「きろく」ボタンをタップして\nきょうあったことを書いてね',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 13, color: const Color(0xFF5C3D10).withOpacity(0.4), height: 1.5)),
+                            const SizedBox(height: 24),
+                            // 矢印で誘導
+                            Icon(Icons.arrow_downward_rounded, size: 28, color: MaColors.gold.withOpacity(0.5)),
+                          ],
+                        ),
                       ),
                     )
                   : RefreshIndicator(
